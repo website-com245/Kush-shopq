@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusStore — Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+  .page-sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 640px) { .settings-grid { grid-template-columns: 1fr; } }
+  .settings-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+  }
+  .settings-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .settings-card-title svg { color: var(--accent); }
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-info .setting-label { font-size: 14px; font-weight: 600; }
+  .setting-info .setting-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .toggle-switch-lg {
+    width: 44px;
+    height: 24px;
+    background: var(--border);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-switch-lg::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+  }
+  .toggle-switch-lg.active { background: var(--accent); }
+  .toggle-switch-lg.active::after { transform: translateX(20px); }
+  .setting-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+  .setting-select:focus { border-color: var(--accent); }
+  .alert-box {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert-box.success {
+    background: rgba(34,211,165,0.1);
+    border: 1px solid rgba(34,211,165,0.3);
+    color: var(--success);
+  }
+  .alert-box.show { display: block; }
+  .btn-save {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(124,92,252,0.4);
+  }
+  .clear-cache-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .clear-cache-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .version-info {
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  </style>
+</head>
+<body>
+<div class="main-content">
+  <div class="page-container">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-sub">Manage your preferences and application settings</p>
+
+    <div class="settings-grid">
+      <!-- Appearance -->
+      <div class="settings-card">
+        <div class="settings-card-title">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          Appearance
+        </div>
+        <div class="alert-box" id="appearanceAlert"></div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Dark Mode</div>
+            <div class="setting-desc">Switch between light and dark theme</div>
+          </div>
+          <div class="toggle-switch-lg" id="darkModeToggle" onclick="toggleDarkMode()"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Accent Color</div>
+            <div class="setting-desc">Customize the accent color</div>
+          </div>
+          <select class="setting-select" id="accentColor" onchange="saveAccentColor()">
+            <option value="purple">Purple</option>
+            <option value="blue">Blue</option>
+            <option value="green">Green</option>
+            <option value="orange">Orange</option>
+            <option value="pink">Pink</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Animations</div>
+            <div class="setting-desc">Enable or disable UI animations</div>
+          </div>
+          <div class="toggle-switch-lg active" id="animationsToggle" onclick="toggleAnimations()"></div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="settings-card">
+        <div class="settings-card-title">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          Notifications
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Push Notifications</div>
+            <div class="setting-desc">Receive order and promo notifications</div>
+          </div>
+          <div class="toggle-switch-lg active" id="pushToggle" onclick="togglePush()"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Order Updates</div>
+            <div class="setting-desc">Get notified when orders are approved</div>
+          </div>
+          <div class="toggle-switch-lg active" id="orderToggle" onclick="toggleOrderNotif()"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">New Games Alert</div>
+            <div class="setting-desc">Be notified when new games are added</div>
+          </div>
+          <div class="toggle-switch-lg" id="newGameToggle" onclick="toggleNewGameNotif()"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Points Reminder</div>
+            <div class="setting-desc">Reminder when points are low</div>
+          </div>
+          <div class="toggle-switch-lg" id="pointsToggle" onclick="togglePointsNotif()"></div>
+        </div>
+      </div>
+
+      <!-- Privacy & Security -->
+      <div class="settings-card">
+        <div class="settings-card-title">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Privacy & Security
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Profile Visibility</div>
+            <div class="setting-desc">Who can see your profile info</div>
+          </div>
+          <select class="setting-select" id="visibilitySelect" onchange="saveVisibility()">
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+            <option value="friends">Friends Only</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Activity Status</div>
+            <div class="setting-desc">Show your online status</div>
+          </div>
+          <div class="toggle-switch-lg active" id="activityToggle" onclick="toggleActivity()"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Two-Factor Auth</div>
+            <div class="setting-desc">Add extra security to your account</div>
+          </div>
+          <div class="toggle-switch-lg" id="tfaToggle" onclick="toggleTFA()"></div>
+        </div>
+      </div>
+
+      <!-- Storage & Data -->
+      <div class="settings-card">
+        <div class="settings-card-title">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+          Storage & Data
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Cache Size</div>
+            <div class="setting-desc" id="cacheSize">Calculating...</div>
+          </div>
+          <button class="clear-cache-btn" onclick="clearCache()" style="width:auto;padding:8px 16px;font-size:12px">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Clear
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Auto-Download Images</div>
+            <div class="setting-desc">Cache game images for faster loading</div>
+          </div>
+          <div class="toggle-switch-lg active" id="autoDlToggle" onclick="toggleAutoDl()"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Data Saver Mode</div>
+            <div class="setting-desc">Reduce data usage by loading smaller images</div>
+          </div>
+          <div class="toggle-switch-lg" id="dataSaverToggle" onclick="toggleDataSaver()"></div>
+        </div>
+
+        <button class="btn-save" onclick="exportData()">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Export My Data
+        </button>
+      </div>
+    </div>
+
+    <div class="version-info">
+      <p>NexusStore v2.0.0</p>
+      <p style="margin-top:4px">Made with ❤️ for gamers</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyA4JpEiy3lJZCDhoi1g7zNXqKzbdI0SAsM",
+  authDomain: "messengerchatapp-7c754.firebaseapp.com",
+  databaseURL: "https://messengerchatapp-7c754-default-rtdb.firebaseio.com",
+  projectId: "messengerchatapp-7c754",
+  storageBucket: "messengerchatapp-7c754.firebasestorage.app",
+  messagingSenderId: "78446807414",
+  appId: "1:78446807414:web:e1879f4bd9f10115e81257",
+  measurementId: "G-VBWRC4SWL5"
+};
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  const theme = localStorage.getItem('theme') || 'dark';
+  if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+
+  let currentUser = null;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    currentUser = user;
+
+    const snap = await get(ref(db, 'users/' + user.uid));
+    const userData = snap.val() || {};
+    const isAdmin = userData.role === 'admin';
+
+    renderTopbar('Settings', userData, isAdmin);
+    renderSidebar('setting', userData, isAdmin);
+
+    // Load saved settings
+    loadSettings();
+    calculateCacheSize();
+  });
+
+  function loadSettings() {
+    // Theme
+    const dark = localStorage.getItem('theme') !== 'light';
+    if (dark) {
+      document.getElementById('darkModeToggle').classList.add('active');
+    } else {
+      document.getElementById('darkModeToggle').classList.remove('active');
+    }
+
+    // Animations
+    const anim = localStorage.getItem('animations') !== 'disabled';
+    document.getElementById('animationsToggle').classList.toggle('active', anim);
+
+    // Push
+    const push = localStorage.getItem('pushNotif') !== 'disabled';
+    document.getElementById('pushToggle').classList.toggle('active', push);
+
+    // Order
+    const order = localStorage.getItem('orderNotif') !== 'disabled';
+    document.getElementById('orderToggle').classList.toggle('active', order);
+
+    // New games
+    const newGame = localStorage.getItem('newGameNotif') === 'enabled';
+    document.getElementById('newGameToggle').classList.toggle('active', newGame);
+
+    // Points
+    const pts = localStorage.getItem('pointsNotif') === 'enabled';
+    document.getElementById('pointsToggle').classList.toggle('active', pts);
+
+    // Activity
+    const act = localStorage.getItem('activityStatus') !== 'hidden';
+    document.getElementById('activityToggle').classList.toggle('active', act);
+
+    // Auto DL
+    const autoDl = localStorage.getItem('autoDl') !== 'disabled';
+    document.getElementById('autoDlToggle').classList.toggle('active', autoDl);
+
+    // Data saver
+    const saver = localStorage.getItem('dataSaver') === 'enabled';
+    document.getElementById('dataSaverToggle').classList.toggle('active', saver);
+
+    // Accent
+    const accent = localStorage.getItem('accentColor') || 'purple';
+    document.getElementById('accentColor').value = accent;
+    applyAccentColor(accent);
+
+    // Visibility
+    const vis = localStorage.getItem('visibility') || 'public';
+    document.getElementById('visibilitySelect').value = vis;
+  }
+
+  function toggleDarkMode() {
+    const el = document.getElementById('darkModeToggle');
+    const isDark = el.classList.toggle('active');
+    const theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    showToast('Theme Updated', `Switched to ${theme} mode`, 'success');
+  }
+
+  function toggleAnimations() {
+    const el = document.getElementById('animationsToggle');
+    const enabled = el.classList.toggle('active');
+    localStorage.setItem('animations', enabled ? 'enabled' : 'disabled');
+    showToast('Animations', enabled ? 'Animations enabled' : 'Animations disabled', 'info');
+  }
+
+  function togglePush() {
+    const el = document.getElementById('pushToggle');
+    const enabled = el.classList.toggle('active');
+    localStorage.setItem('pushNotif', enabled ? 'enabled' : 'disabled');
+    showToast('Notifications', `Push notifications ${enabled ? 'enabled' : 'disabled'}`, 'info');
+  }
+
+  function toggleOrderNotif() {
+    const el = document.getElementById('orderToggle');
+    const enabled = el.classList.toggle('active');
+    localStorage.setItem('orderNotif', enabled ? 'enabled' : 'disabled');
+    showToast('Order Updates', `Order notifications ${enabled ? 'enabled' : 'disabled'}`, 'info');
+  }
+
+  function toggleNewGameNotif() {
+    const el = document.getElementById('newGameToggle');
+    const enabled = el.classList.toggle('active');
+    localStorage.setItem('newGameNotif', enabled ? 'enabled' : 'disabled');
+    showToast('New Games Alert', `New game alerts ${enabled ? 'enabled' : 'disabled'}`, 'info');
+  }
+
+  function togglePointsNotif() {
+    const el = document.getElementById('pointsToggle');
+    const enabled = el.classList.toggle('active');
+    localStorage.setItem('pointsNotif', enabled ? 'enabled' : 'disabled');
+    showToast('Points Reminder', `Points reminder ${enabled ? 'enabled' : 'disabled'}`, 'info');
+  }
+
+  function toggleActivity() {
+    const el = document.getElementById('activityToggle');
+    const enabled = el.classList.toggle('active');
+    localStorage.setItem('activityStatus', enabled ? 'visible' : 'hidden');
+    showToast('Activity Status', `Activity status ${enabled ? 'visible' : 'hidden'}`, 'info');
+  }
+
+  function toggleTFA() {
+    const el = document.getElementById('tfaToggle');
+    const enabled = el.classList.toggle('active');
+    if (enabled) {
+      showToast('2FA', 'Two-factor authentication coming soon!', 'info');
+    } else {
+      showToast('2FA', 'Two-factor authentication disabled', 'info');
+    }
+  }
+
+  function toggleAutoDl() {
+    const el = document.getElementById('autoDlToggle');
+    const enabled = el.classList.toggle('active');
+    localStorage.setItem('autoDl', enabled ? 'enabled' : 'disabled');
+    showToast('Auto-Download', `Auto-download images ${enabled ? 'enabled' : 'disabled'}`, 'info');
+  }
+
+  function toggleDataSaver() {
+    const el = document.getElementById('dataSaverToggle');
+    const enabled = el.classList.toggle('active');
+    localStorage.setItem('dataSaver', enabled ? 'enabled' : 'disabled');
+    showToast('Data Saver', `Data saver mode ${enabled ? 'enabled' : 'disabled'}`, 'info');
+  }
+
+  function saveAccentColor() {
+    const color = document.getElementById('accentColor').value;
+    localStorage.setItem('accentColor', color);
+    applyAccentColor(color);
+    showToast('Accent Color', `Accent color changed to ${color}`, 'success');
+  }
+
+  function applyAccentColor(color) {
+    const colors = {
+      purple: { accent: '#7c5cfc', accent2: '#c084fc' },
+      blue: { accent: '#3b82f6', accent2: '#60a5fa' },
+      green: { accent: '#22d3a5', accent2: '#34d399' },
+      orange: { accent: '#f97316', accent2: '#fb923c' },
+      pink: { accent: '#ec4899', accent2: '#f472b6' }
+    };
+    const c = colors[color] || colors.purple;
+    document.documentElement.style.setProperty('--accent', c.accent);
+    document.documentElement.style.setProperty('--accent2', c.accent2);
+  }
+
+  function saveVisibility() {
+    const vis = document.getElementById('visibilitySelect').value;
+    localStorage.setItem('visibility', vis);
+    showToast('Privacy', `Profile visibility set to ${vis}`, 'success');
+  }
+
+  function calculateCacheSize() {
+    let size = 0;
+    for (let key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        size += localStorage[key].length * 2;
+      }
+    }
+    const mb = (size / 1024 / 1024).toFixed(2);
+    document.getElementById('cacheSize').textContent = `${mb} MB used`;
+  }
+
+  function clearCache() {
+    if (!confirm('Clear all cached data? This will reset your local settings.')) return;
+    const keysToKeep = ['theme', 'accentColor'];
+    for (let key in localStorage) {
+      if (localStorage.hasOwnProperty(key) && !keysToKeep.includes(key)) {
+        localStorage.removeItem(key);
+      }
+    }
+    calculateCacheSize();
+    showToast('Cache Cleared', 'All cached data has been removed', 'success');
+  }
+
+  function exportData() {
+    if (!currentUser) return;
+    get(ref(db, 'users/' + currentUser.uid)).then(snap => {
+      const data = snap.val();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'nexusstore_account_data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Data Exported', 'Your account data has been downloaded', 'success');
+    });
+  }
+
+  function showToast(title, msg, type) {
+    const id = 'toast_' + Date.now();
+    const el = document.createElement('div');
+    el.className = `toast ${type}`; el.id = id;
+    el.innerHTML = `<div><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><button class="toast-close" onclick="document.getElementById('${id}').remove()">×</button>`;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(() => { const t = document.getElementById(id); if(t) t.remove(); }, 5000);
+  }
+  window.showToast = showToast;
+
+  function renderTopbar(title, userData, isAdmin) {
+    const initial = (userData.displayName || userData.email || 'U')[0].toUpperCase();
+    document.body.insertAdjacentHTML('afterbegin', `
+      <div class="topbar">
+        <button class="hamburger" onclick="toggleSidebar()"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <span class="logo-inline">${title}</span>
+        <div class="topbar-right">
+          <div class="avatar-btn" onclick="window.location.href='account.html'">${initial}</div>
+        </div>
+      </div>
+      <div class="toast-container" id="toastContainer"></div>
+    `);
+  }
+
+    function renderSidebar(currentPage, userData, isAdmin) {
+    const adminItems = isAdmin ? `
+      <div class="nav-section">Admin</div>
+      <a href="admin-dashboard.html" class="nav-item ${currentPage==='admin-dashboard'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Admin Dashboard <span class="admin-badge">Admin</span></a>
+      <a href="upload.html" class="nav-item ${currentPage==='upload'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload Game</a>
+    ` : '';
+    document.body.insertAdjacentHTML('afterbegin', `
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-header"><div class="sidebar-logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="sidebar-logo-text">NexusStore</span></div>
+        <div class="sidebar-user"><div class="sidebar-user-name">${userData.displayName||'User'}</div><div class="sidebar-user-email">${userData.email||''}</div><div class="sidebar-points"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${userData.points||0} pts</div></div>
+        <nav class="sidebar-nav">
+          <div class="nav-section">Main</div>
+          <a href="home.html" class="nav-item ${currentPage==='home'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Home</a>
+          <a href="shop.html" class="nav-item ${currentPage==='shop'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> Products</a>
+          <div class="nav-section">Account</div>
+          <a href="account.html" class="nav-item ${currentPage==='account'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> Account</a>
+          <a href="point.html" class="nav-item ${currentPage==='point'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Your Points</a>
+          <a href="buy-point.html" class="nav-item ${currentPage==='buy-point'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg> Buy Points</a>
+          <a href="done-buy.html" class="nav-item ${currentPage==='done-buy'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Done Buy</a>
+          <div class="nav-section">Preferences</div>
+          <a href="setting.html" class="nav-item ${currentPage==='setting'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg> Settings</a>
+          <div class="theme-toggle" onclick="toggleTheme()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg> Theme <div class="toggle-switch"></div></div>
+          ${adminItems}
+        </nav>
+        <div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Sign Out</button></div>
+      </div>
+      <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    `);
+  }
+
+  window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); };
+  window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); };
+  window.toggleTheme = () => { const c = document.documentElement.getAttribute('data-theme'); const n = c==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',n); localStorage.setItem('theme',n); };
+  window.doLogout = async () => { await signOut(auth); window.location.href = 'login.html'; };
+</script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusStore — Buy Points</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+  .page-sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .buy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .pt-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 18px;
+    padding: 24px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .pt-card:hover { border-color: rgba(124,92,252,0.5); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.25); }
+  .pt-card.selected { border-color: var(--accent); background: linear-gradient(135deg, rgba(124,92,252,0.08), rgba(192,132,252,0.05)); box-shadow: 0 0 0 4px rgba(124,92,252,0.15); }
+  .pt-card.popular::before { content: 'POPULAR'; position: absolute; top: 12px; right: -24px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; padding: 4px 30px; transform: rotate(45deg); }
+  .pt-pts { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+  .pt-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .pt-price { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); margin-top: 12px; }
+  .pt-card.selected .pt-price { color: var(--accent2); }
+  .payment-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    max-width: 520px;
+  }
+  .payment-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .payment-title svg { color: var(--accent); }
+  .payment-form { display: none; }
+  .payment-form.active { display: block; }
+  .gcash-info {
+    background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(192,132,252,0.08));
+    border: 1px solid rgba(124,92,252,0.2);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .gcash-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 800;
+    text-align: center;
+    letter-spacing: 4px;
+    margin: 12px 0;
+    color: var(--text);
+  }
+  .gcash-name { text-align: center; font-size: 13px; color: var(--muted); }
+  .step-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .form-group input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .form-group input:focus { border-color: var(--accent); }
+  .form-group input::placeholder { color: var(--muted); }
+  .upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+  .upload-area:hover { border-color: var(--accent); background: rgba(124,92,252,0.04); }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+  .upload-preview { max-width: 100%; max-height: 200px; border-radius: 10px; display: none; margin-top: 12px; }
+  .upload-preview.show { display: block; }
+  .btn-submit { width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 12px; padding: 15px; color: #fff; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,92,252,0.4); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .alert-box { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .alert-box.error { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: var(--error); }
+  .alert-box.success { background: rgba(34,211,165,0.1); border: 1px solid rgba(34,211,165,0.3); color: var(--success); }
+  .alert-box.show { display: block; }
+  .current-pts { text-align: center; padding: 16px; background: var(--surface2); border-radius: 12px; margin-bottom: 20px; font-size: 14px; color: var(--muted); }
+  .current-pts span { color: var(--accent2); font-weight: 700; font-family: 'Syne', sans-serif; font-size: 20px; }
+  .pending-msg { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--warning); margin-bottom: 24px; }
+  .pending-msg svg { flex-shrink: 0; }
+  .requests-list { margin-top: 24px; }
+  .req-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .req-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .req-pts-label { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; color: var(--accent2); }
+  .req-status { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; }
+  .req-status.pending { background: rgba(251,191,36,0.15); color: var(--warning); }
+  .req-status.completed { background: rgba(34,211,165,0.15); color: var(--success); }
+  .req-status.rejected { background: rgba(244,63,94,0.15); color: var(--error); }
+  .req-date { font-size: 12px; color: var(--muted); }
+  .req-proof { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-top: 8px; cursor: pointer; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div class="main-content">
+  <div class="page-container">
+    <h1 class="page-title">Buy Points</h1>
+    <p class="page-sub">Purchase points to buy games from the store</p>
+
+    <div class="pending-msg" id="pendingMsg" style="display:none">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>You have <strong id="pendingCount">0</strong> pending request(s). Please wait for admin approval.</span>
+    </div>
+
+    <div class="current-pts">
+      Your Current Points: <span id="currentPtsDisplay">0</span> pts
+    </div>
+
+    <!-- Points Packages -->
+    <div class="buy-grid" id="pointsGrid">
+      <div class="pt-card" onclick="selectPts(50, 50, this)">
+        <div class="pt-pts">50</div>
+        <div class="pt-label">POINTS</div>
+        <div class="pt-price">₱50.00</div>
+      </div>
+      <div class="pt-card" onclick="selectPts(100, 100, this)">
+        <div class="pt-pts">100</div>
+        <div class="pt-label">POINTS</div>
+        <div class="pt-price">₱100.00</div>
+      </div>
+      <div class="pt-card popular" onclick="selectPts(200, 200, this)">
+        <div class="pt-pts">200</div>
+        <div class="pt-label">POINTS</div>
+        <div class="pt-price">₱200.00</div>
+      </div>
+      <div class="pt-card" onclick="selectPts(500, 500, this)">
+        <div class="pt-pts">500</div>
+        <div class="pt-label">POINTS</div>
+        <div class="pt-price">₱500.00</div>
+      </div>
+      <div class="pt-card" onclick="selectPts(1000, 1000, this)">
+        <div class="pt-pts">1000</div>
+        <div class="pt-label">POINTS</div>
+        <div class="pt-price">₱1,000.00</div>
+      </div>
+    </div>
+
+    <!-- GCash Payment -->
+    <div class="payment-section">
+      <div class="alert-box" id="submitAlert"></div>
+
+      <div class="payment-title">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        GCash Payment
+      </div>
+
+      <div class="gcash-info">
+        <div class="step-label">Send payment to this GCash number:</div>
+        <div class="gcash-number">0917-123-4567</div>
+        <div class="gcash-name">NEXUSSTORE / SHAN CHEAT</div>
+      </div>
+
+      <div class="payment-form active" id="paymentForm">
+        <div class="step-label">Step 1: Select Points Package Above</div>
+
+        <div class="step-label" style="margin-top:16px">Step 2: Your Reference / Amount</div>
+        <div class="form-group">
+          <label>Reference Number (or leave blank)</label>
+          <input type="text" id="refNumber" placeholder="Enter your GCash reference number (optional)">
+        </div>
+
+        <div class="step-label" style="margin-top:16px">Step 3: Proof of Payment</div>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" accept="image/*" onchange="previewProof(event)">
+          <div id="uploadPlaceholder">
+            <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="color:var(--muted);margin-bottom:8px"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>in 1
+                       <div style="font-size:13px;font-weight:500">Click to upload screenshot</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">JPG, PNG (Max 5MB)</div>
+          </div>
+          <img id="proofPreview" class="upload-preview" src="" alt="Proof">
+        </div>
+
+        <button class="btn-submit" id="submitBtn" onclick="submitRequest()" disabled>
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Submit Request
+        </button>
+      </div>
+    </div>
+
+    <!-- Your Requests -->
+    <div class="requests-list" id="requestsList">
+      <h2 class="section-title">Your Recent Requests</h2>
+      <div id="requestsContainer" style="color:var(--muted);font-size:14px">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, get, push, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA4JpEiy3lJZCDhoi1g7zNXqKzbdI0SAsM",
+    authDomain: "messengerchatapp-7c754.firebaseapp.com",
+    databaseURL: "https://messengerchatapp-7c754-default-rtdb.firebaseio.com",
+    projectId: "messengerchatapp-7c754",
+    storageBucket: "messengerchatapp-7c754.firebasestorage.app",
+    messagingSenderId: "78446807414",
+    appId: "1:78446807414:web:e1879f4bd9f10115e81257",
+    measurementId: "G-VBWRC4SWL5"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  const theme = localStorage.getItem('theme') || 'dark';
+  if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+
+  let currentUser = null;
+  let currentUserData = {};
+  let selectedPoints = null;
+  let selectedPrice = null;
+  let proofBase64 = null;
+
+    onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    currentUser = user;
+
+    const snap = await get(ref(db, 'users/' + user.uid));
+    currentUserData = snap.val() || {};
+    const isAdmin = currentUserData.role === 'admin';
+
+    injectSidebar(currentUserData, isAdmin);
+
+    // Real-time points
+    onValue(ref(db, 'users/' + user.uid + '/points'), (s) => {
+      currentUserData.points = s.val() || 0;
+      document.getElementById('currentPtsDisplay').textContent = currentUserData.points.toLocaleString();
+    });
+
+    // Load requests
+    loadMyRequests();
+  });
+
+  window.selectPts = (pts, price, el) => {
+    selectedPoints = pts;
+    selectedPrice = price;
+    document.querySelectorAll('.pt-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('submitBtn').disabled = false;
+  };
+
+  window.previewProof = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      proofBase64 = ev.target.result;
+      const preview = document.getElementById('proofPreview');
+      preview.src = proofBase64;
+      preview.classList.add('show');
+      document.getElementById('uploadPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.submitRequest = async () => {
+    const alertEl = document.getElementById('submitAlert');
+    alertEl.classList.remove('show');
+
+    if (!selectedPoints) {
+      showAlert(alertEl, 'Please select a points package.', 'error');
+      return;
+    }
+
+    if (!proofBase64) {
+      showAlert(alertEl, 'Please upload proof of payment.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="18" height="18" class="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Submitting...';
+
+    try {
+      // Use uid as the key to prevent duplicate submissions
+      const requestId = currentUser.uid + '_' + Date.now();
+
+      await set(ref(db, 'pointRequests/' + requestId), {
+        userId: currentUser.uid,
+        userName: currentUserData.displayName || 'User',
+        points: selectedPoints,
+        amount: selectedPrice,
+        refNumber: document.getElementById('refNumber').value.trim() || '',
+        proofImage: proofBase64,
+        status: 'pending',
+        createdAt: Date.now()
+      });
+
+      showAlert(alertEl, `Request for ${selectedPoints} points submitted! Wait for admin approval.`, 'success');
+
+      // Reset
+      selectedPoints = null;
+      selectedPrice = null;
+      proofBase64 = null;
+      document.querySelectorAll('.pt-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('refNumber').value = '';
+      document.getElementById('proofPreview').src = '';
+      document.getElementById('proofPreview').classList.remove('show');
+      document.getElementById('uploadPlaceholder').style.display = 'block';
+      document.getElementById('submitBtn').disabled = true;
+
+      loadMyRequests();
+
+    } catch (e) {
+      showAlert(alertEl, 'Failed: ' + e.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Submit Request';
+  };
+
+  async function loadMyRequests() {
+    const snap = await get(ref(db, 'pointRequests'));
+    const container = document.getElementById('requestsContainer');
+    const requests = snap.val();
+
+    if (!requests) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px">No requests yet.</div>';
+      document.getElementById('pendingMsg').style.display = 'none';
+      return;
+    }
+
+    const myReqs = Object.entries(requests)
+      .filter(([, r]) => r.userId === currentUser.uid)
+      .map(([id, r]) => ({ id, ...r }))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    const pending = myReqs.filter(r => r.status === 'pending').length;
+    document.getElementById('pendingCount').textContent = pending;
+    document.getElementById('pendingMsg').style.display = pending > 0 ? 'flex' : 'none';
+
+    if (!myReqs.length) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px">No requests yet.</div>';
+      return;
+    }
+
+    container.innerHTML = myReqs.slice(0, 5).map(req => {
+      const date = req.createdAt ? new Date(req.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+      const statusClass = req.status;
+      const statusText = req.status === 'completed' ? '✅ Completed' : req.status === 'rejected' ? '❌ Rejected' : '⏳ Pending';
+
+      return `
+        <div class="req-card">
+          <div class="req-card-header">
+            <span class="req-pts-label">+${req.points} Points</span>
+            <span class="req-status ${statusClass}">${statusText}</span>
+          </div>
+          <div class="req-date">₱${req.amount} · ${date}${req.refNumber ? ` · Ref: ${req.refNumber}` : ''}</div>
+          ${req.proofImage ? `<img src="${req.proofImage}" class="req-proof" onclick="showProofImg('${req.id}')" title="View proof">` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.showProofImg = (reqId) => {
+    get(ref(db, 'pointRequests/' + reqId)).then(snap => {
+      const req = snap.val();
+      if (!req || !req.proofImage) return;
+      const win = window.open('', '_blank');
+      win.document.write(`<html><head><title>Proof of Payment</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#111}.container{max-width:90%;max-height:90%}.container img{max-width:100%;max-height:90vh;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.8)}</style></head><body><div class="container"><img src="${req.proofImage}" alt="Proof"></div></body></html>`);
+    });
+  };
+
+  function showAlert(el, msg, type) {
+    el.textContent = msg;
+    el.className = `alert-box ${type} show`;
+    setTimeout(() => { el.classList.remove('show'); }, 6000);
+  }
+
+  function showToast(title, msg, type) {
+    const id = 'toast_' + Date.now();
+    const el = document.createElement('div');
+    el.className = `toast ${type}`; el.id = id;
+    el.innerHTML = `<div><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><button class="toast-close" onclick="document.getElementById('${id}').remove()">×</button>`;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(() => { const t = document.getElementById(id); if(t) t.remove(); }, 5000);
+  }
+  window.showToast = showToast;
+
+  function injectSidebar(userData, isAdmin) {
+    const adminItems = isAdmin ? `
+      <div class="nav-section">Admin</div>
+      <a href="admin-dashboard.html" class="nav-item"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Admin Dashboard <span class="admin-badge">Admin</span></a>
+      <a href="upload.html" class="nav-item"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload Game</a>
+    ` : '';
+    const initial = (userData.displayName || userData.email || 'U')[0].toUpperCase();
+    document.body.insertAdjacentHTML('afterbegin', `
+      <div class="topbar">
+        <button class="hamburger" onclick="toggleSidebar()"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <span class="logo-inline">Buy Points</span>
+        <div class="topbar-right">
+          <div class="avatar-btn" onclick="window.location.href='account.html'">${initial}</div>
+        </div>
+      </div>
+      <div class="toast-container" id="toastContainer"></div>
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-header"><div class="sidebar-logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="sidebar-logo-text">NexusStore</span></div>
+        <div class="sidebar-user"><div class="sidebar-user-name">${userData.displayName||'User'}</div><div class="sidebar-user-email">${userData.email||''}</div><div class="sidebar-points"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${userData.points||0} pts</div></div>
+        <nav class="sidebar-nav">
+          <div class="nav-section">Main</div>
+          <a href="home.html" class="nav-item"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Home</a>
+          <a href="shop.html" class="nav-item"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> Products</a>
+          <div class="nav-section">Account</div>
+          <a href="account.html" class="nav-item"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> Account</a>
+          <a href="point.html" class="nav-item"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Your Points</a>
+          <a href="buy-point.html" class="nav-item active"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg> Buy Points</a>
+          <a href="done-buy.html" class="nav-item"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Done Buy</a>
+          <div class="nav-section">Preferences</div>
+          <a href="setting.html" class="nav-item"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg> Settings</a>
+                    <div class="theme-toggle" onclick="toggleTheme()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg> Theme <div class="toggle-switch"></div></div>
+          ${adminItems}
+        </nav>
+        <div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Sign Out</button></div>
+      </div>
+      <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    `);
+  }
+
+  window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); };
+  window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); };
+  window.toggleTheme = () => { const c = document.documentElement.getAttribute('data-theme'); const n = c==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',n); localStorage.setItem('theme',n); };
+  window.doLogout = async () => { await signOut(auth); window.location.href = 'login.html'; };
+</script>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; }
+</style>
+</body>
+</html>

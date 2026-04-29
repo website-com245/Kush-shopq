@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KUSH STORE — Upload Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+  .page-sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .upload-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 800px;
+  }
+  .form-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .form-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-section-title svg { color: var(--accent); }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .form-group label span { color: var(--error); }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-group input::placeholder, .form-group textarea::placeholder { color: var(--muted); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .form-row, .form-row-3 { grid-template-columns: 1fr; } }
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .upload-area:hover, .upload-area.drag { border-color: var(--accent); background: rgba(124,92,252,0.04); }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { color: var(--muted); margin-bottom: 10px; }
+  .upload-text { font-size: 13px; font-weight: 500; }
+  .upload-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .preview-img { max-width: 100%; max-height: 180px; border-radius: 10px; margin-top: 12px; display: none; }
+  .stock-info {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: rgba(124,92,252,0.08);
+    border: 1px solid rgba(124,92,252,0.2);
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .stock-info .stock-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 800;
+    color: var(--accent2);
+  }
+  .key-input-wrap { position: relative; }
+  .key-input-wrap textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s;
+  }
+  .key-input-wrap textarea:focus { border-color: var(--accent); }
+  .key-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .btn-upload {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-upload:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,92,252,0.4); }
+  .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .alert-box { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .alert-box.error { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: var(--error); }
+  .alert-box.success { background: rgba(34,211,165,0.1); border: 1px solid rgba(34,211,165,0.3); color: var(--success); }
+  .alert-box.show { display: block; }
+  .existing-games { margin-top: 32px; }
+  .games-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 16px; }
+  .game-edit-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.2s; }
+  .game-edit-card:hover { border-color: rgba(124,92,252,0.4); }
+  .game-edit-thumb { width: 100%; height: 140px; background: linear-gradient(135deg, var(--surface2), var(--surface3)); display: flex; align-items: center; justify-content: center; color: var(--muted); overflow: hidden; position: relative; }
+  .game-edit-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .game-stock-badge { position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+  .stock-available { background: rgba(34,211,165,0.2); color: var(--success); }
+  .stock-soldout { background: rgba(244,63,94,0.2); color: var(--error); }
+  .game-edit-body { padding: 14px; }
+  .game-edit-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .game-edit-meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
+  .game-edit-actions { display: flex; gap: 6px; }
+  .game-edit-btn { flex: 1; padding: 7px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-align: center; }
+  .game-edit-btn.edit { background: rgba(124,92,252,0.12); color: var(--accent2); }
+  .game-edit-btn.edit:hover { background: rgba(124,92,252,0.2); }
+  .game-edit-btn.delete { background: rgba(244,63,94,0.12); color: var(--error); }
+  .game-edit-btn.delete:hover { background: rgba(244,63,94,0.2); }
+  .game-edit-btn.restock { background: rgba(34,211,165,0.12); color: var(--success); }
+  .game-edit-btn.restock:hover { background: rgba(34,211,165,0.2); }
+  .key-display {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    max-height: 60px;
+    overflow: hidden;
+  }
+  .key-display strong { color: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="main-content">
+  <div class="page-container">
+    <h1 class="page-title">Upload Game</h1>
+    <p class="page-sub">Add new games to your store</p>
+
+    <div class="upload-form">
+      <div class="alert-box" id="uploadAlert"></div>
+
+      <!-- Game Image -->
+      <div class="form-section">
+        <div class="form-section-title">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Game Image / Thumbnail
+        </div>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" accept="image/*" onchange="previewGameImage(event)">
+          <div class="upload-icon">
+            <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <div class="upload-text">Click or drag to upload thumbnail</div>
+          <div class="upload-sub">PNG, JPG · Recommended: 800x450</div>
+          <img id="gamePreviewImg" class="preview-img" src="" alt="Preview">
+        </div>
+      </div>
+
+      <!-- Game Details -->
+      <div class="form-section">
+        <div class="form-section-title">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2"/></svg>
+          Game Details
+        </div>
+        <div class="form-group">
+          <label>Game Name <span>*</span></label>
+          <input type="text" id="gameName" placeholder="e.g. Mobile Legends Mod Menu">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="gameDesc" placeholder="Brief description of the game..."></textarea>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Points Price <span>*</span></label>
+            <input type="number" id="gamePrice" placeholder="100" min="1">
+          </div>
+          <div class="form-group">
+            <label>Buy Limit <span>*</span></label>
+            <input type="number" id="buyLimit" placeholder="e.g. 50" min="1">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="gameCategory">
+              <option value="Mobile">Mobile</option>
+              <option value="iOS">iOS</option>
+              <option value="Android">Android</option>
+              <option value="PC">PC</option>
+              <option value="Injector">Injector</option>
+              <option value="Mod">Mod</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- APK Hosting -->
+      <div class="form-section">
+        <div class="form-section-title">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          APK Hosting Link <span>*</span>
+        </div>
+        <div class="form-group">
+          <label>Download Link <span>*</span></label>
+          <input type="url" id="hostingLink" placeholder="https://example.com/game.apk">
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:-8px">Paste your APK download link here (MediaFire, Google Drive, MEGA, etc.)</p>
+      </div>
+
+     <!-- Game Key -->
+<div class="form-section">
+  <div class="form-section-title">
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+    Game Key <span>*</span> — One Key Only
+  </div>
+  <div class="form-group">
+    <label>Game Key / Serial <span>*</span></label>
+    <div class="key-input-wrap">
+      <input type="text" id="gameKey" placeholder="Enter game key here...">
+    </div>
+    <div class="key-note">
+       Enter youw key for your cheat
+    </div>
+  </div>
+</div>
+       
+
+            <button class="btn-upload" id="uploadBtn" onclick="uploadGame()">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        Upload Game
+      </button>
+    </div>
+
+    <div class="existing-games">
+      <h2 class="section-title" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">Existing Games</h2>
+      <div class="games-list" id="existingGames">
+        <div style="color:var(--muted);font-size:14px;padding:20px;text-align:center">Loading games...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, get, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyAa4s7Tn4RNk8TcBE60H54Iy9sKX4bp8L8",
+  authDomain: "ok123-716e3.firebaseapp.com",
+  projectId: "ok123-716e3",
+  storageBucket: "ok123-716e3.firebasestorage.app",
+  messagingSenderId: "395598144464",
+  appId: "1:395598144464:web:3c0439d9ac9c9688654fd5",
+  measurementId: "G-5LCN0JXS9P"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  const theme = localStorage.getItem('theme') || 'dark';
+  if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+
+  let imageBase64 = null;
+  let currentUser = null;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    currentUser = user;
+
+    const snap = await get(ref(db, 'users/' + user.uid));
+    const userData = snap.val() || {};
+    if (userData.role !== 'admin') {
+      window.location.href = 'home.html';
+      return;
+    }
+
+    renderTopbar('Upload Game', userData, true);
+    renderSidebar('upload', userData, true);
+    loadExistingGames();
+  });
+
+  async function loadExistingGames() {
+    const snap = await get(ref(db, 'games'));
+    const container = document.getElementById('existingGames');
+    const games = snap.val();
+
+    if (!games) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:20px;text-align:center">No games uploaded yet.</div>';
+      return;
+    }
+
+    const entries = Object.entries(games)
+      .map(([id, g]) => ({ id, ...g }))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    container.innerHTML = entries.map(game => {
+      const keys = game.keys || [];
+      const buyLimit = game.buyLimit || 0;
+      const sold = game.sold || 0;
+      const remaining = buyLimit - sold;
+      const isSoldOut = remaining <= 0;
+      const keyPreview = keys.length > 0 ? keys.slice(0, 2).join('\n') + (keys.length > 2 ? '\n...' : '') : 'No keys';
+      const stockClass = isSoldOut ? 'stock-soldout' : 'stock-available';
+      const stockText = isSoldOut ? 'SOLD OUT' : `${remaining} in stock`;
+
+      return `
+        <div class="game-edit-card">
+          <div class="game-edit-thumb">
+            ${game.imageBase64 ? `<img src="${game.imageBase64}" alt="${game.name}">` : `<svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2"/></svg>`}
+            <span class="game-stock-badge ${stockClass}">${stockText}</span>
+          </div>
+          <div class="game-edit-body">
+            <div class="game-edit-name">${game.name}</div>
+            <div class="game-edit-meta">
+              💰 ${game.pointsPrice} pts · 📁 ${game.category || 'Mobile'}<br>
+              🔗 Hosting: ${game.hostingLink ? `<a href="${game.hostingLink}" target="_blank" style="color:var(--accent2)">Link</a>` : 'None'}<br>
+              📦 Limit: ${buyLimit} · Sold: ${sold}
+            </div>
+            <div class="key-display"><strong>Keys:</strong> ${keyPreview}</div>
+            <div class="game-edit-actions">
+              <button class="game-edit-btn edit" onclick="editGame('${game.id}')">Edit</button>
+              <button class="game-edit-btn restock" onclick="restockGame('${game.id}')">Restock</button>
+              <button class="game-edit-btn delete" onclick="deleteGame('${game.id}')">Delete</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.previewGameImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      imageBase64 = ev.target.result;
+      const img = document.getElementById('gamePreviewImg');
+      img.src = imageBase64;
+      img.style.display = 'block';
+      document.querySelector('.upload-text').textContent = file.name;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.uploadGame = async () => {
+  const name = document.getElementById('gameName').value.trim();
+  const desc = document.getElementById('gameDesc').value.trim();
+  const price = parseInt(document.getElementById('gamePrice').value) || 0;
+  const buyLimit = parseInt(document.getElementById('buyLimit').value) || 0;
+  const category = document.getElementById('gameCategory').value;
+  const hostingLink = document.getElementById('hostingLink').value.trim();
+  const keyInput = document.getElementById('gameKey').value.trim();
+  const alertEl = document.getElementById('uploadAlert');
+  
+  // Validation
+  if (!name) { showAlert(alertEl, 'Please enter a game name.', 'error'); return; }
+  if (price < 1) { showAlert(alertEl, 'Please enter a valid points price.', 'error'); return; }
+  if (buyLimit < 1) { showAlert(alertEl, 'Please enter a buy limit.', 'error'); return; }
+  if (!hostingLink) { showAlert(alertEl, 'Please enter the APK hosting link.', 'error'); return; }
+  if (!keyInput) { showAlert(alertEl, 'Please enter the game key.', 'error'); return; }
+  
+  // ✅ FIXED: Only ONE key, store as array with single item
+  const keys = [keyInput];
+  
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="18" height="18" class="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Uploading...';
+  
+  try {
+    const gameRef = push(ref(db, 'games'));
+    await set(gameRef, {
+      name,
+      description: desc,
+      pointsPrice: price,
+      buyLimit: buyLimit,
+      sold: 0,
+      category,
+      hostingLink,
+      keys: keys, // ✅ Single key as array
+      imageBase64: imageBase64 || '',
+      createdAt: Date.now()
+    });
+    
+    showAlert(alertEl, 'Game uploaded successfully!', 'success');
+    
+    // Reset form
+    document.getElementById('gameName').value = '';
+    document.getElementById('gameDesc').value = '';
+    document.getElementById('gamePrice').value = '';
+    document.getElementById('buyLimit').value = '';
+    document.getElementById('hostingLink').value = '';
+    document.getElementById('gameKey').value = '';
+    imageBase64 = null;
+    document.getElementById('gamePreviewImg').style.display = 'none';
+    document.querySelector('.upload-text').textContent = 'Click or drag to upload thumbnail';
+    
+    loadExistingGames();
+  } catch (e) {
+    showAlert(alertEl, 'Upload failed: ' + e.message, 'error');
+  }
+  
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload Game';
+};
+
+  window.editGame = async (gameId) => {
+    const snap = await get(ref(db, 'games/' + gameId));
+    const game = snap.val();
+    if (!game) return;
+
+    const newName = prompt('Edit game name:', game.name);
+    if (newName === null) return;
+    const newPrice = prompt('Edit points price:', game.pointsPrice);
+    if (newPrice === null) return;
+    const newLimit = prompt('Edit buy limit:', game.buyLimit || 0);
+    if (newLimit === null) return;
+    const newHosting = prompt('Edit hosting link:', game.hostingLink || '');
+    if (newHosting === null) return;
+
+    try {
+      await update(ref(db, 'games/' + gameId), {
+        name: newName.trim() || game.name,
+        pointsPrice: parseInt(newPrice) || game.pointsPrice,
+        buyLimit: parseInt(newLimit) || game.buyLimit,
+        hostingLink: newHosting.trim() || ''
+      });
+      showToast('Game Updated', 'Game details have been updated', 'success');
+      loadExistingGames();
+    } catch (e) {
+      showToast('Error', e.message, 'error');
+    }
+  };
+
+  window.restockGame = async (gameId) => {
+    const snap = await get(ref(db, 'games/' + gameId));
+    const game = snap.val();
+    if (!game) return;
+
+    const newKeys = prompt(`Add more keys for "${game.name}"\n\nEnter new keys (one per line):\nCurrent stock: ${(game.buyLimit || 0) - (game.sold || 0)}`);
+    if (!newKeys || !newKeys.trim()) return;
+
+    const keysToAdd = newKeys.split('\n').map(k => k.trim()).filter(k => k.length > 0);
+    const currentKeys = game.keys || [];
+    const updatedKeys = [...currentKeys, ...keysToAdd];
+    const newLimit = (game.buyLimit || 0) + keysToAdd.length;
+
+    try {
+      await update(ref(db, 'games/' + gameId), {
+        keys: updatedKeys,
+        buyLimit: newLimit
+      });
+      showToast('Restocked!', `Added ${keysToAdd.length} new keys`, 'success');
+      loadExistingGames();
+    } catch (e) {
+      showToast('Error', e.message, 'error');
+    }
+  };
+
+  window.deleteGame = async (gameId) => {
+    const snap = await get(ref(db, 'games/' + gameId));
+    const game = snap.val();
+    if (!game) return;
+
+    if (!confirm(`Delete "${game.name}"? This cannot be undone.`)) return;
+    if (!confirm('FINAL WARNING: The game will be permanently removed.')) return;
+    try {
+      await remove(ref(db, 'games/' + gameId));
+      showToast('Deleted', 'Game has been removed', 'success');
+      loadExistingGames();
+    } catch (e) {
+      showToast('Error', e.message, 'error');
+    }
+  };
+
+  function showAlert(el, msg, type) {
+    el.textContent = msg;
+    el.className = `alert-box ${type} show`;
+    setTimeout(() => { el.classList.remove('show'); }, 5000);
+  }
+
+  function showToast(title, msg, type) {
+    const id = 'toast_' + Date.now();
+    const el = document.createElement('div');
+    el.className = `toast ${type}`; el.id = id;
+    el.innerHTML = `<div><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><button class="toast-close" onclick="document.getElementById('${id}').remove()">×</button>`;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(() => { const t = document.getElementById(id); if(t) t.remove(); }, 5000);
+  }
+  window.showToast = showToast;
+
+  function renderTopbar(title, userData, isAdmin) {
+    const initial = (userData.displayName || userData.email || 'U')[0].toUpperCase();
+    document.body.insertAdjacentHTML('afterbegin', `
+      <div class="topbar">
+        <button class="hamburger" onclick="toggleSidebar()"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <span class="logo-inline">${title}</span>
+        <div class="topbar-right">
+          <div class="avatar-btn" onclick="window.location.href='account.html'">${initial}</div>
+        </div>
+      </div>
+      <div class="toast-container" id="toastContainer"></div>
+    `);
+  }
+
+  function renderSidebar(currentPage, userData, isAdmin) {
+    document.body.insertAdjacentHTML('afterbegin', `
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-header"><div class="sidebar-logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="sidebar-logo-text">KUSH SHOP</span></div>
+        <div class="sidebar-user"><div class="sidebar-user-name">${userData.displayName||'User'}</div><div class="sidebar-user-email">${userData.email||''}</div><div class="sidebar-points"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${userData.points||0} pts</div></div>
+        <nav class="sidebar-nav">
+          <div class="nav-section">Main</div>
+                  <a href="home.html" class="nav-item ${currentPage==='home'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Home</a>
+          <a href="shop.html" class="nav-item ${currentPage==='shop'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> Products</a>
+          <div class="nav-section">Admin</div>
+          <a href="admin-dashboard.html" class="nav-item ${currentPage==='admin-dashboard'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Admin Dashboard <span class="admin-badge">Admin</span></a>
+          <a href="upload.html" class="nav-item active"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload Game</a>
+          <div class="nav-section">Account</div>
+          <a href="account.html" class="nav-item ${currentPage==='account'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> Account</a>
+          <a href="point.html" class="nav-item ${currentPage==='point'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Your Points</a>
+          <a href="buy-point.html" class="nav-item ${currentPage==='buy-point'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg> Buy Points</a>
+          <a href="done-buy.html" class="nav-item ${currentPage==='done-buy'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Done Buy</a>
+          <div class="nav-section">Preferences</div>
+          <a href="setting.html" class="nav-item ${currentPage==='setting'?'active':''}"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg> Settings</a>
+          <div class="theme-toggle" onclick="toggleTheme()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg> Theme <div class="toggle-switch"></div></div>
+        </nav>
+        <div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Sign Out</button></div>
+      </div>
+      <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    `);
+  }
+
+  window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); };
+  window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); };
+  window.toggleTheme = () => { const c = document.documentElement.getAttribute('data-theme'); const n = c==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',n); localStorage.setItem('theme',n); };
+  window.doLogout = async () => { await signOut(auth); window.location.href = 'login.html'; };
+</script>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; }
+</style>
+</body>
+</html>

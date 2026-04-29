@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KUSH STORE — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: #2a2a3a;
+    --accent: #7c5cfc;
+    --accent2: #c084fc;
+    --text: #f0f0ff;
+    --muted: #7070a0;
+    --success: #22d3a5;
+    --error: #f43f5e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .bg-glow {
+    position: fixed; z-index: 0;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .login-card {
+    position: relative; z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 0 60px rgba(124,92,252,0.08), 0 24px 80px rgba(0,0,0,0.5);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 32px;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 800;
+    background: linear-gradient(135deg, #fff, var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: var(--muted); font-size: 14px;
+    margin-bottom: 32px;
+  }
+  .step { display: none; }
+  .step.active { display: block; }
+  .step-indicator {
+    display: flex; gap: 8px; margin-bottom: 28px;
+  }
+  .step-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s;
+  }
+  .step-dot.active { background: var(--accent); width: 20px; border-radius: 3px; }
+  .step-dot.done { background: var(--success); }
+  .btn-google {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    transition: all 0.2s;
+  }
+  .btn-google:hover {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.06);
+    transform: translateY(-1px);
+  }
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 24px 0;
+    color: var(--muted); font-size: 13px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--border);
+  }
+  label {
+    display: block;
+    font-size: 13px; font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 16px;
+  }
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: all 0.2s;
+    margin-top: 4px;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(124,92,252,0.4);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5; cursor: not-allowed; transform: none;
+  }
+  .code-inputs {
+    display: flex; gap: 10px; margin-bottom: 16px;
+  }
+  .code-inputs input {
+    text-align: center; font-size: 22px; font-weight: 700;
+    padding: 16px 8px; margin: 0;
+    width: 50px;
+  }
+  .alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert.error { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: var(--error); }
+  .alert.success { background: rgba(34,211,165,0.1); border: 1px solid rgba(34,211,165,0.3); color: var(--success); }
+  .alert.show { display: block; }
+  .resend-link {
+    text-align: center; font-size: 13px;
+    color: var(--muted); margin-top: 12px;
+  }
+  .resend-link a {
+    color: var(--accent); text-decoration: none;
+    cursor: pointer;
+  }
+  .resend-link a:hover { text-decoration: underline; }
+  .loading-spinner {
+    display: none; width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .password-wrapper { position: relative; }
+  .password-wrapper input { padding-right: 48px; }
+  .toggle-pw {
+    position: absolute; right: 14px; top: 14px;
+    cursor: pointer; color: var(--muted);
+    background: none; border: none;
+  }
+  .timer {
+    font-size: 13px; color: var(--accent);
+    text-align: center; margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="login-card">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="logo-text">KUSH STORE</span>
+  </div>
+
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+  </div>
+
+  <!-- Step 1: Choose Login Method -->
+  <div class="step active" id="step1">
+    <h1>Welcome back</h1>
+    <p class="subtitle">Sign in to your account to continue</p>
+
+    <button class="btn-google" id="googleBtn" onclick="signInWithGoogle()">
+      <svg width="20" height="20" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div class="divider">or use email</div>
+
+    <label>Email Address</label>
+    <input type="email" id="emailInput" placeholder="you@example.com">
+    <div class="alert error" id="emailAlert"></div>
+    <button class="btn-primary" onclick="sendCode()">Send Verification Code</button>
+  </div>
+
+  <!-- Step 2: Enter Verification Code -->
+  <div class="step" id="step2">
+    <h1>Check your email</h1>
+    <p class="subtitle" id="codeSentTo">We sent a 6-digit code to your email</p>
+
+    <div class="code-inputs">
+      <input type="text" maxlength="1" class="code-digit" oninput="moveToNext(this, 0)">
+      <input type="text" maxlength="1" class="code-digit" oninput="moveToNext(this, 1)">
+      <input type="text" maxlength="1" class="code-digit" oninput="moveToNext(this, 2)">
+      <input type="text" maxlength="1" class="code-digit" oninput="moveToNext(this, 3)">
+      <input type="text" maxlength="1" class="code-digit" oninput="moveToNext(this, 4)">
+      <input type="text" maxlength="1" class="code-digit" oninput="moveToNext(this, 5)">
+    </div>
+
+    <div class="timer" id="codeTimer">Code expires in 10:00</div>
+    <div class="alert error" id="codeAlert"></div>
+    <button class="btn-primary" onclick="verifyCode()">Verify Code</button>
+    <div class="resend-link">Didn't get it? <a onclick="resendCode()">Resend code</a></div>
+  </div>
+
+  <!-- Step 3: Set Password -->
+  <div class="step" id="step3">
+    <h1>Set your password</h1>
+    <p class="subtitle">Create a secure password for your account</p>
+
+    <label>Password</label>
+    <div class="password-wrapper">
+      <input type="password" id="passwordInput" placeholder="Min. 8 characters">
+      <button class="toggle-pw" onclick="togglePw('passwordInput')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </button>
+    </div>
+
+    <label>Confirm Password</label>
+    <div class="password-wrapper">
+      <input type="password" id="confirmInput" placeholder="Repeat password">
+      <button class="toggle-pw" onclick="togglePw('confirmInput')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </button>
+    </div>
+
+    <div class="alert error" id="pwAlert"></div>
+    <div class="alert success" id="pwSuccess"></div>
+    <button class="btn-primary" onclick="completeLogin()">Enter NexusStore</button>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, set, get, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAa4s7Tn4RNk8TcBE60H54Iy9sKX4bp8L8",
+  authDomain: "ok123-716e3.firebaseapp.com",
+  projectId: "ok123-716e3",
+  storageBucket: "ok123-716e3.firebasestorage.app",
+  messagingSenderId: "395598144464",
+  appId: "1:395598144464:web:3c0439d9ac9c9688654fd5",
+  measurementId: "G-5LCN0JXS9P"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // Check if already logged in
+  onAuthStateChanged(auth, (user) => {
+    if (user) window.location.href = 'home.html';
+  });
+
+  let verificationCode = '';
+  let codeExpiry = null;
+  let timerInterval = null;
+  let currentEmail = '';
+
+  window.signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      // Save user to DB if new
+      const userRef = ref(db, 'users/' + user.uid);
+      const snap = await get(userRef);
+      if (!snap.exists()) {
+        await set(userRef, {
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          points: 0,
+          role: 'buyer',
+          createdAt: Date.now()
+        });
+      }
+      window.location.href = 'home.html';
+    } catch (err) {
+      showAlert('emailAlert', err.message, 'error');
+    }
+  };
+
+  window.sendCode = async () => {
+    const email = document.getElementById('emailInput').value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showAlert('emailAlert', 'Please enter a valid email address.', 'error');
+      return;
+    }
+    currentEmail = email;
+    // Generate 6-digit code
+    verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    codeExpiry = Date.now() + 10 * 60 * 1000;
+
+    // Store code in DB (in real app, send via email service)
+    await set(ref(db, 'verificationCodes/' + email.replace(/\./g,'_')), {
+      code: verificationCode,
+      expiry: codeExpiry
+    });
+
+    // In production: trigger an email via Cloud Functions
+    // For now, show the code in console for testing
+    console.log('Verification code:', verificationCode);
+
+    document.getElementById('codeSentTo').textContent = `We sent a 6-digit code to ${email}`;
+    goToStep(2);
+    startTimer();
+  };
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const remaining = codeExpiry - Date.now();
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('codeTimer').textContent = 'Code expired. Please resend.';
+        return;
+      }
+      const m = Math.floor(remaining / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      document.getElementById('codeTimer').textContent = `Code expires in ${m}:${s.toString().padStart(2,'0')}`;
+    }, 1000);
+  }
+
+  window.verifyCode = async () => {
+    const digits = [...document.querySelectorAll('.code-digit')].map(i => i.value).join('');
+    if (digits.length < 6) {
+      showAlert('codeAlert', 'Please enter the full 6-digit code.', 'error');
+      return;
+    }
+    const codeRef = ref(db, 'verificationCodes/' + currentEmail.replace(/\./g,'_'));
+    const snap = await get(codeRef);
+    if (!snap.exists()) {
+      showAlert('codeAlert', 'Code not found. Please resend.', 'error');
+      return;
+    }
+    const { code, expiry } = snap.val();
+    if (Date.now() > expiry) {
+      showAlert('codeAlert', 'Code has expired. Please resend.', 'error');
+      return;
+    }
+    if (digits !== code) {
+      showAlert('codeAlert', 'Incorrect code. Please try again.', 'error');
+      return;
+    }
+    clearInterval(timerInterval);
+    goToStep(3);
+  };
+
+  window.resendCode = () => window.sendCode();
+
+  window.completeLogin = async () => {
+    const pw = document.getElementById('passwordInput').value;
+    const cp = document.getElementById('confirmInput').value;
+    if (pw.length < 8) { showAlert('pwAlert', 'Password must be at least 8 characters.', 'error'); return; }
+    if (pw !== cp) { showAlert('pwAlert', 'Passwords do not match.', 'error'); return; }
+
+    try {
+      let result;
+      try {
+        result = await createUserWithEmailAndPassword(auth, currentEmail, pw);
+      } catch (e) {
+        if (e.code === 'auth/email-already-in-use') {
+          result = await signInWithEmailAndPassword(auth, currentEmail, pw);
+        } else throw e;
+      }
+      const user = result.user;
+      const userRef = ref(db, 'users/' + user.uid);
+      const snap = await get(userRef);
+      if (!snap.exists()) {
+        await set(userRef, {
+          email: currentEmail,
+          displayName: currentEmail.split('@')[0],
+          points: 0,
+          role: 'buyer',
+          createdAt: Date.now()
+        });
+      }
+      showAlert('pwSuccess', 'Welcome to NexusStore! Redirecting...', 'success');
+      setTimeout(() => window.location.href = 'home.html', 1500);
+    } catch (err) {
+      showAlert('pwAlert', err.message, 'error');
+    }
+  };
+
+  function goToStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById('dot' + i);
+      dot.classList.remove('active', 'done');
+      if (i < n) dot.classList.add('done');
+      else if (i === n) dot.classList.add('active');
+    }
+  }
+
+  function showAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = `alert ${type} show`;
+  }
+
+  window.moveToNext = (input, idx) => {
+    const digits = document.querySelectorAll('.code-digit');
+    if (input.value && idx < 5) digits[idx + 1].focus();
+  };
+
+  window.togglePw = (id) => {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+  };
+
+  // Initialize globals
+  window.goToStep = goToStep;
+  window.showAlert = showAlert;
+</script>
+</body>
+</html>
